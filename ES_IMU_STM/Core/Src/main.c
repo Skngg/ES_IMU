@@ -27,6 +27,7 @@
 #include "retarget.h"
 #include "lsm6dsl_reg.h"
 #include "lsm303agr_reg.h"
+#include "Algorithm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -203,7 +204,7 @@ int main(void)
 	lsm6dsl_xl_data_rate_set(&lsm6dsl_ctx, LSM6DSL_XL_ODR_12Hz5);
 	lsm6dsl_gy_data_rate_set(&lsm6dsl_ctx, LSM6DSL_GY_ODR_12Hz5);
 	lsm6dsl_xl_full_scale_set(&lsm6dsl_ctx, LSM6DSL_2g);
-	lsm6dsl_gy_full_scale_set(&lsm6dsl_ctx, LSM6DSL_2000dps);
+	lsm6dsl_gy_full_scale_set(&lsm6dsl_ctx, LSM6DSL_125dps);
 
 	lsm303agr_mag_block_data_update_set(&lsm303agr_ctx, PROPERTY_ENABLE);
 	lsm303agr_mag_data_rate_set(&lsm303agr_ctx, LSM303AGR_MG_ODR_10Hz);
@@ -211,7 +212,7 @@ int main(void)
 			LSM303AGR_SENS_OFF_CANC_EVERY_ODR);
 	lsm303agr_mag_operating_mode_set(&lsm303agr_ctx, LSM303AGR_CONTINUOUS_MODE);
 
-	HAL_TIM_Base_Start_IT(&htim7);
+//	HAL_TIM_Base_Start_IT(&htim7);
 
 
 	memset(data_raw_acceleration.u8bit, 0x00, 3 * sizeof(int16_t));
@@ -219,19 +220,30 @@ int main(void)
 	memset(data_raw_magneto.u8bit, 0x00, 3 * sizeof(int16_t));
 
 	printf("***** BEGIN MEASUREMENTS *****\r\n");
+
+	Algorithm_initialize();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
-		if (tim_flag) {
-			lsm6dsl_acceleration_raw_get(&lsm6dsl_ctx, data_raw_acceleration.u8bit);
-			lsm6dsl_angular_rate_raw_get(&lsm6dsl_ctx, data_raw_gyro.u8bit);
-			lsm303agr_magnetic_raw_get(&lsm303agr_ctx, data_raw_magneto.u8bit);
+		lsm6dsl_acceleration_raw_get(&lsm6dsl_ctx, data_raw_acceleration.u8bit);
+		lsm6dsl_angular_rate_raw_get(&lsm6dsl_ctx, data_raw_gyro.u8bit);
+		//lsm303agr_magnetic_raw_get(&lsm303agr_ctx, data_raw_magneto.u8bit);
 
-			printf("Accl: %d %d %d\r\n", data_raw_acceleration.i16bit[0], data_raw_acceleration.i16bit[1], data_raw_acceleration.i16bit[2]);
-			printf("Gyro: %d %d %d\r\n", data_raw_gyro.i16bit[0], data_raw_gyro.i16bit[1], data_raw_gyro.i16bit[2]);
-			printf("Magn: %d %d %d\r\n", data_raw_magneto.i16bit[0], data_raw_magneto.i16bit[1], data_raw_magneto.i16bit[2]);
+//		printf("Accl: %d %d %d\r\n", data_raw_acceleration.i16bit[0], data_raw_acceleration.i16bit[1], data_raw_acceleration.i16bit[2]);
+//		printf("Gyro: %d %d %d\r\n", data_raw_gyro.i16bit[0], data_raw_gyro.i16bit[1], data_raw_gyro.i16bit[2]);
+		//printf("Magn: %d %d %d\r\n", data_raw_magneto.i16bit[0], data_raw_magneto.i16bit[1], data_raw_magneto.i16bit[2]);
+
+		Algorithm_U.AccX = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[0])*0.00981;
+		Algorithm_U.AccY = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[1])*0.00981;
+		Algorithm_U.AccZ = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[2])*0.00981;
+		Algorithm_U.GyroX = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[0])*0.001;
+		Algorithm_U.GyroY = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[1])*0.001;
+		Algorithm_U.GyroZ = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[2])*0.001;
+		Algorithm_step();
+
+		printf("EulXYZ: %f %f %f\r\n", Algorithm_Y.EulXYZ[0], Algorithm_Y.EulXYZ[1], Algorithm_Y.EulXYZ[2]);
 
 //			acceleration_mg[0] = lsm6dsl_from_fs2g_to_mg(
 //					data_raw_acceleration.i16bit[0]);
@@ -239,9 +251,11 @@ int main(void)
 //					data_raw_acceleration.i16bit[1]);
 //			acceleration_mg[2] = lsm6dsl_from_fs2g_to_mg(
 //					data_raw_acceleration.i16bit[2]);
-			tim_flag = 0;
-			HAL_TIM_Base_Start_IT(&htim7);
-		}
+		HAL_Delay(10);
+//		if (tim_flag) {
+//			tim_flag = 0;
+//			HAL_TIM_Base_Start_IT(&htim7);
+//		}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
