@@ -1,0 +1,11 @@
+-IJ:/Uczelnia/MGR/Sem2/ES2/ES_IMU/Madgwick
+-IJ:/Uczelnia/MGR/Sem2/ES2/ES_IMU/Madgwick/Algorithm_ert_rtw
+-IC:/Program\ Files/MATLAB/R2020a/extern/include
+-IC:/Program\ Files/MATLAB/R2020a/simulink/include
+-IC:/Program\ Files/MATLAB/R2020a/rtw/c/src
+-IC:/Program\ Files/MATLAB/R2020a/rtw/c/src/ext_mode/common
+-IC:/Program\ Files/MATLAB/R2020a/rtw/c/ert
+-IC:/Program\ Files/MATLAB/R2020a/toolbox/dsp/include
+-IC:/Program\ Files/MATLAB/R2020a/toolbox/dsp/extern/src/export/include/src
+-IC:/Program\ Files/MATLAB/R2020a/toolbox/dsp/extern/src/export/include
+-IC:/Program\ Files/MATLAB/R2020a/toolbox/shared/dsp/vision/matlab/include

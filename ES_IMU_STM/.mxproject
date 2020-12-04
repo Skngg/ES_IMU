@@ -9,17 +9,17 @@ CDefines=USE_HAL_DRIVER;STM32F446xx;USE_HAL_DRIVER;USE_HAL_DRIVER;
 [PreviousGenFiles]
 AdvancedFolderStructure=true
 HeaderFileListSize=3
-HeaderFiles#0=F:/Projects/ES_IMU/Core/Inc/stm32f4xx_it.h
-HeaderFiles#1=F:/Projects/ES_IMU/Core/Inc/stm32f4xx_hal_conf.h
-HeaderFiles#2=F:/Projects/ES_IMU/Core/Inc/main.h
+HeaderFiles#0=J:/Uczelnia/MGR/Sem2/ES2/ES_IMU/ES_IMU_STM/Core/Inc/stm32f4xx_it.h
+HeaderFiles#1=J:/Uczelnia/MGR/Sem2/ES2/ES_IMU/ES_IMU_STM/Core/Inc/stm32f4xx_hal_conf.h
+HeaderFiles#2=J:/Uczelnia/MGR/Sem2/ES2/ES_IMU/ES_IMU_STM/Core/Inc/main.h
 HeaderFolderListSize=1
-HeaderPath#0=F:/Projects/ES_IMU/Core/Inc
+HeaderPath#0=J:/Uczelnia/MGR/Sem2/ES2/ES_IMU/ES_IMU_STM/Core/Inc
 HeaderFiles=;
 SourceFileListSize=3
-SourceFiles#0=F:/Projects/ES_IMU/Core/Src/stm32f4xx_it.c
-SourceFiles#1=F:/Projects/ES_IMU/Core/Src/stm32f4xx_hal_msp.c
-SourceFiles#2=F:/Projects/ES_IMU/Core/Src/main.c
+SourceFiles#0=J:/Uczelnia/MGR/Sem2/ES2/ES_IMU/ES_IMU_STM/Core/Src/stm32f4xx_it.c
+SourceFiles#1=J:/Uczelnia/MGR/Sem2/ES2/ES_IMU/ES_IMU_STM/Core/Src/stm32f4xx_hal_msp.c
+SourceFiles#2=J:/Uczelnia/MGR/Sem2/ES2/ES_IMU/ES_IMU_STM/Core/Src/main.c
 SourceFolderListSize=1
-SourcePath#0=F:/Projects/ES_IMU/Core/Src
+SourcePath#0=J:/Uczelnia/MGR/Sem2/ES2/ES_IMU/ES_IMU_STM/Core/Src
 SourceFiles=;
 

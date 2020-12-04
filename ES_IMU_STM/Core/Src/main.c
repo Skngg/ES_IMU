@@ -212,7 +212,7 @@ int main(void)
 			LSM303AGR_SENS_OFF_CANC_EVERY_ODR);
 	lsm303agr_mag_operating_mode_set(&lsm303agr_ctx, LSM303AGR_CONTINUOUS_MODE);
 
-//	HAL_TIM_Base_Start_IT(&htim7);
+	HAL_TIM_Base_Start_IT(&htim7);
 
 
 	memset(data_raw_acceleration.u8bit, 0x00, 3 * sizeof(int16_t));
@@ -227,23 +227,6 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
-		lsm6dsl_acceleration_raw_get(&lsm6dsl_ctx, data_raw_acceleration.u8bit);
-		lsm6dsl_angular_rate_raw_get(&lsm6dsl_ctx, data_raw_gyro.u8bit);
-		//lsm303agr_magnetic_raw_get(&lsm303agr_ctx, data_raw_magneto.u8bit);
-
-//		printf("Accl: %d %d %d\r\n", data_raw_acceleration.i16bit[0], data_raw_acceleration.i16bit[1], data_raw_acceleration.i16bit[2]);
-//		printf("Gyro: %d %d %d\r\n", data_raw_gyro.i16bit[0], data_raw_gyro.i16bit[1], data_raw_gyro.i16bit[2]);
-		//printf("Magn: %d %d %d\r\n", data_raw_magneto.i16bit[0], data_raw_magneto.i16bit[1], data_raw_magneto.i16bit[2]);
-
-		Algorithm_U.AccX = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[0])*0.00981;
-		Algorithm_U.AccY = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[1])*0.00981;
-		Algorithm_U.AccZ = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[2])*0.00981;
-		Algorithm_U.GyroX = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[0])*0.001;
-		Algorithm_U.GyroY = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[1])*0.001;
-		Algorithm_U.GyroZ = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[2])*0.001;
-		Algorithm_step();
-
-		printf("EulXYZ: %f %f %f\r\n", Algorithm_Y.EulXYZ[0], Algorithm_Y.EulXYZ[1], Algorithm_Y.EulXYZ[2]);
 
 //			acceleration_mg[0] = lsm6dsl_from_fs2g_to_mg(
 //					data_raw_acceleration.i16bit[0]);
@@ -251,11 +234,28 @@ int main(void)
 //					data_raw_acceleration.i16bit[1]);
 //			acceleration_mg[2] = lsm6dsl_from_fs2g_to_mg(
 //					data_raw_acceleration.i16bit[2]);
-		HAL_Delay(10);
-//		if (tim_flag) {
-//			tim_flag = 0;
-//			HAL_TIM_Base_Start_IT(&htim7);
-//		}
+		if (tim_flag) {
+			tim_flag = 0;
+			HAL_TIM_Base_Start_IT(&htim7);
+			lsm6dsl_acceleration_raw_get(&lsm6dsl_ctx, data_raw_acceleration.u8bit);
+			lsm6dsl_angular_rate_raw_get(&lsm6dsl_ctx, data_raw_gyro.u8bit);
+			//lsm303agr_magnetic_raw_get(&lsm303agr_ctx, data_raw_magneto.u8bit);
+
+			printf("Accl: %d %d %d\r\n", data_raw_acceleration.i16bit[0], data_raw_acceleration.i16bit[1], data_raw_acceleration.i16bit[2]);
+			printf("Gyro: %d %d %d\r\n", data_raw_gyro.i16bit[0], data_raw_gyro.i16bit[1], data_raw_gyro.i16bit[2]);
+			//printf("Magn: %d %d %d\r\n", data_raw_magneto.i16bit[0], data_raw_magneto.i16bit[1], data_raw_magneto.i16bit[2]);
+
+			Algorithm_U.AccX = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[0])*0.00981;
+			Algorithm_U.AccY = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[1])*0.00981;
+			Algorithm_U.AccZ = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[2])*0.00981;
+			Algorithm_U.GyroX = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[0])*0.001;
+			Algorithm_U.GyroY = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[1])*0.001;
+			Algorithm_U.GyroZ = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[2])*0.001;
+
+			Algorithm_step();
+
+			printf("EulXYZ: %f %f %f\r\n", Algorithm_Y.EulXYZ[0], Algorithm_Y.EulXYZ[1], Algorithm_Y.EulXYZ[2]);
+		}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -275,15 +275,27 @@ void SystemClock_Config(void)
   /** Configure the main internal regulator output voltage
   */
   __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 180;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 2;
+  RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Activate the Over-Drive mode
+  */
+  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     Error_Handler();
   }
@@ -291,12 +303,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
     Error_Handler();
   }
@@ -354,9 +366,9 @@ static void MX_TIM7_Init(void)
 
   /* USER CODE END TIM7_Init 1 */
   htim7.Instance = TIM7;
-  htim7.Init.Prescaler = 15999;
+  htim7.Init.Prescaler = 8999;
   htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim7.Init.Period = 999;
+  htim7.Init.Period = 99;
   htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
   {
