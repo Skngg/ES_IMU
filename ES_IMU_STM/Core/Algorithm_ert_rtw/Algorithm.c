@@ -9,7 +9,7 @@
  *
  * Model version                  : 1.36
  * Simulink Coder version         : 9.3 (R2020a) 18-Nov-2019
- * C/C++ source code generated on : Fri Dec  4 09:52:50 2020
+ * C/C++ source code generated on : Tue Dec  8 00:13:45 2020
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: ARM Compatible->ARM Cortex
@@ -187,10 +187,10 @@ void Algorithm_step(void)
   /* Sum: '<S1>/Sum1' incorporates:
    *  Gain: '<S1>/beta'
    */
-  rtb_S_Eq_wt_idx_0 -= 0.075574973509759 * Algorithm_DW.Normalization1[0];
-  rtb_S_Eq_wt_idx_1 -= 0.075574973509759 * Algorithm_DW.Normalization1[1];
-  rtb_S_Eq_wt_idx_2 -= 0.075574973509759 * Algorithm_DW.Normalization1[2];
-  rtb_S_Eq_wt_idx_3 -= 0.075574973509759 * Algorithm_DW.Normalization1[3];
+  rtb_S_Eq_wt_idx_0 -= 0.010738715006927038 * Algorithm_DW.Normalization1[0];
+  rtb_S_Eq_wt_idx_1 -= 0.010738715006927038 * Algorithm_DW.Normalization1[1];
+  rtb_S_Eq_wt_idx_2 -= 0.010738715006927038 * Algorithm_DW.Normalization1[2];
+  rtb_S_Eq_wt_idx_3 -= 0.010738715006927038 * Algorithm_DW.Normalization1[3];
 
   /* MATLABSystem: '<S1>/Coordinate Transformation Conversion' */
   Algorithm_DW.aSinInput = 1.0 / sqrt(((rtb_S_Eq_wt_idx_0 * rtb_S_Eq_wt_idx_0 +
