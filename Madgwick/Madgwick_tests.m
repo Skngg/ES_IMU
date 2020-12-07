@@ -1,3 +1,4 @@
+%%
 % [accelReadings,gyroReadings] = IMU(acc,angVel,orientation) Syntax for
 % generating data from IMU sensor using accelerometer and gyro
 
@@ -7,8 +8,8 @@ clear all
 snr = 15; %signal to noise ratio
 bias = 1;
 
-% gyro meas error in rad/s ( 5 deg/s )
-beta = sqrt(3/4) * 3.14159265358979 * 5/180; %Taken from random project, should be calculated for our IMU
+% gyro meas error in rad/s (mean std of noise for gyro = 0.0124)
+beta = sqrt(3/4) * 0.0124;
 %beta is the divergence rate of ^S_E q_ω 
 %expressed as the magnitude of a quaternion derivative corresponding
 %to the gyroscope measurement error
@@ -18,7 +19,7 @@ dt = 1/fs;
 firstLoopNumSamples = fs*8;
 secondLoopNumSamples = fs*4;
 totalNumSamples = firstLoopNumSamples + secondLoopNumSamples;
-
+%%
 traj = kinematicTrajectory('SampleRate',fs);
 
 accBody = zeros(totalNumSamples,3);
@@ -40,7 +41,7 @@ gyroReadings_noised = awgn(gyroReadings, snr);
 
 accelReadings_noised = accelReadings_noised + bias;
 gyroReadings_noised = gyroReadings_noised + bias;
-
+%%
 figure(1)
 t = (0:(totalNumSamples-1))/fs;
 subplot(2,2,1)
@@ -64,7 +65,7 @@ subplot(2,2,4)
 plot(t, angVelBody)
 xlabel('Time (s)')
 title('Angle Velocity')
-
+%%
 figure(2)
 subplot(2,2,1)
 plot(t,accelReadings_noised)
@@ -87,7 +88,7 @@ subplot(2,2,4)
 plot(t, angVelBody)
 xlabel('Time (s)')
 title('Angle Velocity')
-
+%%
 AccX(:,1) = t;
 AccX(:,2) = accelReadings_noised(:,1);
 AccY(:,1) = t;
@@ -104,6 +105,11 @@ GyroZ(:,2) = gyroReadings_noised(:,3);
 
 out = sim('Madgwick_embedded');
 
+Eul(:,1) = out.EulXYZ.Data(1,1,:);
+Eul(:,2) = out.EulXYZ.Data(2,1,:);
+Eul(:,3) = out.EulXYZ.Data(3,1,:);
+
+%%
 figure(3)
 subplot(2,1,1)
 plot(t,eulerd(orientationNED,'XYZ','frame'))
@@ -112,7 +118,83 @@ title('True IMU position')
 ylabel('Euler angle pos')
 
 subplot(2,1,2)
-plot(out.q_est.time,eulerd(quaternion(out.q_est.signals.values),'XYZ','frame'))
+plot(out.EulXYZ.Time,Eul)
+legend('X-axis','Y-axis','Z-axis')
+title('Estimated IMU position')
+ylabel('Euler angle pos')
+xlabel('Time (s)')
+
+%%
+clear AccX AccY AccZ GyroX GyroY GyroZ
+
+load IMU.mat
+
+out = sim('Madgwick_embedded');
+
+Eul_data(:,1) = out.EulXYZ.Data(1,1,:);
+Eul_data(:,2) = out.EulXYZ.Data(2,1,:);
+Eul_data(:,3) = out.EulXYZ.Data(3,1,:);
+
+%%
+figure(4)
+
+plot(out.EulXYZ.Time,Eul_data)
+legend('X-axis','Y-axis','Z-axis')
+title('Estimated IMU position')
+ylabel('Euler angle pos')
+xlabel('Time (s)')
+%%
+AccX_offset = mean(AccX(:,2));
+AccY_offset = mean(AccY(:,2));
+AccZ_offset = mean(AccZ(:,2)) - 9.81;
+
+GyroX_offset = mean(GyroX(:,2));
+GyroY_offset = mean(GyroY(:,2));
+GyroZ_offset = mean(GyroZ(:,2));
+
+stdx = std(GyroX(:,2));
+stdy = std(GyroY(:,2));
+stdz = std(GyroZ(:,2));
+mean_std = (stdx + stdy + stdz)/3
+
+%%
+
+AccX(:,2) = AccX(:,2) - AccX_offset;
+AccY(:,2) = AccY(:,2) - AccY_offset;
+AccZ(:,2) = AccZ(:,2) - AccZ_offset;
+
+GyroX(:,2) = GyroX(:,2) - GyroX_offset;
+GyroY(:,2) = GyroY(:,2) - GyroY_offset;
+GyroZ(:,2) = GyroZ(:,2) - GyroZ_offset;
+
+%%
+
+figure(5)
+subplot(2,1,1)
+plot(AccX(:,1),AccX(:,2),AccY(:,1),AccY(:,2),AccZ(:,1),AccZ(:,2))
+legend('X-axis','Y-axis','Z-axis')
+ylabel('Acceleration (m/s^2)')
+title('Accelerometer Readings')
+xlabel('Time (s)')
+
+subplot(2,1,2)
+plot(GyroX(:,1),GyroX(:,2),GyroY(:,1),GyroY(:,2),GyroZ(:,1),GyroZ(:,2))
+legend('X-axis','Y-axis','Z-axis')
+title('Gyroscope Readings')
+ylabel('Angular Velocity (rad/s)')
+xlabel('Time (s)')
+
+%%
+out = sim('Madgwick_embedded');
+
+Eul_data(:,1) = out.EulXYZ.Data(1,1,:);
+Eul_data(:,2) = out.EulXYZ.Data(2,1,:);
+Eul_data(:,3) = out.EulXYZ.Data(3,1,:);
+
+%%
+figure(6)
+
+plot(out.EulXYZ.Time,Eul_data)
 legend('X-axis','Y-axis','Z-axis')
 title('Estimated IMU position')
 ylabel('Euler angle pos')
