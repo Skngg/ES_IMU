@@ -37,11 +37,11 @@ typedef union {
 	uint8_t u8bit[6];
 } axis3bit16_t;
 
-typedef enum {
-	LSM6DSL_id = 0,
-	LSM303AGR_XL_id,
-	LSM303AGR_MG_id
-} sensor_t;
+typedef union {
+	int16_t i16bit;
+	uint8_t u8bit[2];
+} temp16_t;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -68,7 +68,7 @@ static axis3bit16_t data_raw_acceleration;
 static axis3bit16_t data_raw_gyro;
 static axis3bit16_t data_raw_magneto;
 
-static float acceleration_mg[3];
+static temp16_t data_raw_temp;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -218,6 +218,9 @@ int main(void)
 	memset(data_raw_acceleration.u8bit, 0x00, 3 * sizeof(int16_t));
 	memset(data_raw_gyro.u8bit, 0x00, 3 * sizeof(int16_t));
 	memset(data_raw_magneto.u8bit, 0x00, 3 * sizeof(int16_t));
+	memset(data_raw_temp.u8bit, 0x00, sizeof(int16_t));
+
+	float_t temp_celsius = 0;
 
 	printf("***** BEGIN MEASUREMENTS *****\r\n");
 
@@ -227,18 +230,12 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
-
-//			acceleration_mg[0] = lsm6dsl_from_fs2g_to_mg(
-//					data_raw_acceleration.i16bit[0]);
-//			acceleration_mg[1] = lsm6dsl_from_fs2g_to_mg(
-//					data_raw_acceleration.i16bit[1]);
-//			acceleration_mg[2] = lsm6dsl_from_fs2g_to_mg(
-//					data_raw_acceleration.i16bit[2]);
 		if (tim_flag) {
 			tim_flag = 0;
 			HAL_TIM_Base_Start_IT(&htim7);
 			lsm6dsl_acceleration_raw_get(&lsm6dsl_ctx, data_raw_acceleration.u8bit);
 			lsm6dsl_angular_rate_raw_get(&lsm6dsl_ctx, data_raw_gyro.u8bit);
+			lsm6dsl_temperature_raw_get(&lsm6dsl_ctx, data_raw_temp.u8bit);
 			//lsm303agr_magnetic_raw_get(&lsm303agr_ctx, data_raw_magneto.u8bit);
 
 //			printf("Accl: %d %d %d\r\n", data_raw_acceleration.i16bit[0], data_raw_acceleration.i16bit[1], data_raw_acceleration.i16bit[2]);
@@ -254,6 +251,9 @@ int main(void)
 
 			Algorithm_step();
 
+			temp_celsius = lsm6dsl_from_lsb_to_celsius(data_raw_temp.i16bit);
+
+			printf("Temp: %f\r\n", temp_celsius);
 			printf("Accl: %f %f %f Gyro: %f %f %f \r\n", Algorithm_U.AccX, Algorithm_U.AccY, Algorithm_U.AccZ, Algorithm_U.GyroX, Algorithm_U.GyroY, Algorithm_U.GyroZ);
 			printf("EulXYZ: %f %f %f\r\n", Algorithm_Y.EulXYZ[0], Algorithm_Y.EulXYZ[1], Algorithm_Y.EulXYZ[2]);
 		}

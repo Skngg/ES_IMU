@@ -170,3 +170,7 @@ Backup*
 # Trash files
 
 # End of https://www.toptal.com/developers/gitignore/api/eclipse,c,iarembeddedworkbench
+
+# User specific files
+**/Debug/
+**/Release/
