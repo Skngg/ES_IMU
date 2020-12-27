@@ -29,6 +29,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -58,6 +59,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define LSM303_DRDY_Pin GPIO_PIN_4
+#define LSM303_DRDY_GPIO_Port GPIOA
 #define LED2_Pin GPIO_PIN_5
 #define LED2_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
