@@ -127,7 +127,7 @@ xlabel('Time (s)')
 %%
 clear AccX AccY AccZ GyroX GyroY GyroZ
 
-load IMU.mat
+load IMU_offset.mat
 
 out = sim('Madgwick_embedded');
 
@@ -137,62 +137,6 @@ Eul_data(:,3) = out.EulXYZ.Data(3,1,:);
 
 %%
 figure(4)
-
-plot(out.EulXYZ.Time,Eul_data)
-legend('X-axis','Y-axis','Z-axis')
-title('Estimated IMU position')
-ylabel('Euler angle pos')
-xlabel('Time (s)')
-%%
-AccX_offset = mean(AccX(:,2));
-AccY_offset = mean(AccY(:,2));
-AccZ_offset = mean(AccZ(:,2)) - 9.81;
-
-GyroX_offset = mean(GyroX(:,2));
-GyroY_offset = mean(GyroY(:,2));
-GyroZ_offset = mean(GyroZ(:,2));
-
-stdx = std(GyroX(:,2));
-stdy = std(GyroY(:,2));
-stdz = std(GyroZ(:,2));
-mean_std = (stdx + stdy + stdz)/3
-
-%%
-
-AccX(:,2) = AccX(:,2) - AccX_offset;
-AccY(:,2) = AccY(:,2) - AccY_offset;
-AccZ(:,2) = AccZ(:,2) - AccZ_offset;
-
-GyroX(:,2) = GyroX(:,2) - GyroX_offset;
-GyroY(:,2) = GyroY(:,2) - GyroY_offset;
-GyroZ(:,2) = GyroZ(:,2) - GyroZ_offset;
-
-%%
-
-figure(5)
-subplot(2,1,1)
-plot(AccX(:,1),AccX(:,2),AccY(:,1),AccY(:,2),AccZ(:,1),AccZ(:,2))
-legend('X-axis','Y-axis','Z-axis')
-ylabel('Acceleration (m/s^2)')
-title('Accelerometer Readings')
-xlabel('Time (s)')
-
-subplot(2,1,2)
-plot(GyroX(:,1),GyroX(:,2),GyroY(:,1),GyroY(:,2),GyroZ(:,1),GyroZ(:,2))
-legend('X-axis','Y-axis','Z-axis')
-title('Gyroscope Readings')
-ylabel('Angular Velocity (rad/s)')
-xlabel('Time (s)')
-
-%%
-out = sim('Madgwick_embedded');
-
-Eul_data(:,1) = out.EulXYZ.Data(1,1,:);
-Eul_data(:,2) = out.EulXYZ.Data(2,1,:);
-Eul_data(:,3) = out.EulXYZ.Data(3,1,:);
-
-%%
-figure(6)
 
 plot(out.EulXYZ.Time,Eul_data)
 legend('X-axis','Y-axis','Z-axis')
