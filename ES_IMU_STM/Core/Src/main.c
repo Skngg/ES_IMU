@@ -67,6 +67,7 @@
 //static axis3bit16_t data_raw_acceleration;
 //static axis3bit16_t data_raw_gyro;
 //static axis3bit16_t data_raw_magneto;
+//static float_t temperature;
 
 //static temp16_t data_raw_temp;
 /* USER CODE END PV */
@@ -246,16 +247,19 @@ int main(void)
 //			printf("Gyro: %d %d %d\r\n", data_raw_gyro.i16bit[0], data_raw_gyro.i16bit[1], data_raw_gyro.i16bit[2]);
 			//printf("Magn: %d %d %d\r\n", data_raw_magneto.i16bit[0], data_raw_magneto.i16bit[1], data_raw_magneto.i16bit[2]);
 
-//			Algorithm_U.AccX = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[0])*0.00981 - 0.1476;
-//			Algorithm_U.AccY = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[1])*0.00981 + 0.3055;
-//			Algorithm_U.AccZ = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[2])*0.00981 - 0.2684;
-//			Algorithm_U.GyroX = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[0])*0.001 - 0.3981;
-//			Algorithm_U.GyroY = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[1])*0.001 - 2.4888;
-//			Algorithm_U.GyroZ = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[2])*0.001 - 0.4822;
+			// For temperature  = 20.1605 C degree
+//			temp_celsius = lsm6dsl_from_lsb_to_celsius(data_raw_temp.i16bit);
+//			temp = temp_celsius - 20.1605;
+//			Algorithm_U.AccX = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[0])*0.00981 - 0.1476 - 0.1430;
+//			Algorithm_U.AccY = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[1])*0.00981 + 0.3055 + 0.3624;
+//			Algorithm_U.AccZ = lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[2])*0.00981 - 0.2684 - 0.2633;
+//			Algorithm_U.GyroX = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[0])*0.001 - 0.3981 - 0.3909 + 0.0486*temp;
+//			Algorithm_U.GyroY = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[1])*0.001 - 2.4888 + 2.4622 - 0.1064*temp;
+//			Algorithm_U.GyroZ = lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[2])*0.001 - 0.4822 - 0.4785 - 0.0150*temp;
 //
 //			Algorithm_step();
 //
-//			temp_celsius = lsm6dsl_from_lsb_to_celsius(data_raw_temp.i16bit);
+
 //
 //			printf("Temp: %f\r\n", temp_celsius);
 //			printf("Accl: %f %f %f Gyro: %f %f %f \r\n", Algorithm_U.AccX, Algorithm_U.AccY, Algorithm_U.AccZ, Algorithm_U.GyroX, Algorithm_U.GyroY, Algorithm_U.GyroZ);

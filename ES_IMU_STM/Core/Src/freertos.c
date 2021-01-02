@@ -334,7 +334,9 @@ void StartAlgorithmTask(void *argument)
   /* USER CODE BEGIN StartAlgorithmTask */
 	osStatus_t status;
 	data_raw_mems_t data_raw_mems;
+	temp16_t data_raw_temp;
 	quaternion_t quaternion;
+	float_t temp;
 
 	Algorithm_initialize();
   /* Infinite loop */
@@ -343,12 +345,17 @@ void StartAlgorithmTask(void *argument)
   	status = osMessageQueueGet(acquisitionToAlgorithmQueueHandle, &data_raw_mems, NULL, 0U);   // wait for message
 
   	if (status == osOK) {
-			Algorithm_U.AccX = lsm6dsl_from_fs2g_to_mg(data_raw_mems.acceleration.i16bit[0])*0.00981 - 0.1476;
-			Algorithm_U.AccY = lsm6dsl_from_fs2g_to_mg(data_raw_mems.acceleration.i16bit[1])*0.00981 + 0.3055;
-			Algorithm_U.AccZ = lsm6dsl_from_fs2g_to_mg(data_raw_mems.acceleration.i16bit[2])*0.00981 - 0.2684;
-			Algorithm_U.GyroX = lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[0])*0.001 - 0.3981;
-			Algorithm_U.GyroY = lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[1])*0.001 - 2.4888;
-			Algorithm_U.GyroZ = lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[2])*0.001 - 0.4822;
+  			temp = lsm6dsl_from_lsb_to_celsius(data_raw_temp.i16bit) - 20.1605;
+			Algorithm_U.AccX = lsm6dsl_from_fs2g_to_mg(data_raw_mems.acceleration.i16bit[0])*0.00981 - 0.2906;
+			Algorithm_U.AccY = lsm6dsl_from_fs2g_to_mg(data_raw_mems.acceleration.i16bit[1])*0.00981 + 0.6679;
+			Algorithm_U.AccZ = lsm6dsl_from_fs2g_to_mg(data_raw_mems.acceleration.i16bit[2])*0.00981 - 0.5317;
+//			Algorithm_U.GyroX = (lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[0])*0.001 - 0.7890 + 0.0486*temp) * 0.0174532925;
+//			Algorithm_U.GyroY = (lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[1])*0.001 - 0.0266 - 0.1064*temp) * 0.0174532925;
+//			Algorithm_U.GyroZ = (lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[2])*0.001 - 0.9607 - 0.0150*temp) * 0.0174532925;
+
+			Algorithm_U.GyroX = lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[0])*0.001 - 0.7890 + 0.0486*temp;
+			Algorithm_U.GyroY = lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[1])*0.001 - 0.0266 - 0.1064*temp;
+			Algorithm_U.GyroZ = lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[2])*0.001 - 0.9607 - 0.0150*temp;
 
 			Algorithm_step();
 
@@ -387,7 +394,7 @@ void StartLogTask(void *argument)
   	if (status == osOK) {
   		log_size = sprintf(log_payload, "EulXYZ: %f %f %f\r\n", Algorithm_Y.EulXYZ[0], Algorithm_Y.EulXYZ[1], Algorithm_Y.EulXYZ[2]);
   		HAL_UART_Transmit_DMA(&huart2, log_payload, log_size);
-  		//			printf("Accl: %f %f %f Gyro: %f %f %f \r\n", Algorithm_U.AccX, Algorithm_U.AccY, Algorithm_U.AccZ, Algorithm_U.GyroX, Algorithm_U.GyroY, Algorithm_U.GyroZ);
+//  					printf("Accl: %f %f %f Gyro: %f %f %f \r\n", Algorithm_U.AccX, Algorithm_U.AccY, Algorithm_U.AccZ, Algorithm_U.GyroX, Algorithm_U.GyroY, Algorithm_U.GyroZ);
 //  					printf("EulXYZ: %f %f %f\r\n", Algorithm_Y.EulXYZ[0], Algorithm_Y.EulXYZ[1], Algorithm_Y.EulXYZ[2]);
   		//print log
   	}
