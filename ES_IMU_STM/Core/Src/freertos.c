@@ -33,7 +33,8 @@
 #include "retarget.h"
 #include "lsm6dsl_reg.h"
 #include "lsm303agr_reg.h"
-#include "Algorithm.h"
+//#include "Algorithm.h"
+#include "ahrs_madgwick.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,18 +44,22 @@ typedef union {
 	uint8_t u8bit[6];
 } axis3bit16_t;
 
+typedef struct {
+	float ax[3];
+} axis3_t;
+
 typedef union {
 	int16_t i16bit;
 	uint8_t u8bit[2];
 } temp16_t;
 
 typedef struct {
-	axis3bit16_t acceleration;
-	axis3bit16_t gyro;
-	axis3bit16_t magneto;
-	temp16_t temperature;
-	uint32_t time;
-} data_raw_mems_t;
+	axis3_t acc;
+	axis3_t gyro;
+//	axis3bit16_t magneto;
+	float temp;
+//	uint32_t time;
+} data_mems_t;
 
 typedef enum {
 	LSM6DSL_id = 0,
@@ -183,10 +188,10 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the queue(s) */
   /* creation of acquisitionToAlgorithmQueue */
-  acquisitionToAlgorithmQueueHandle = osMessageQueueNew (1, sizeof(data_raw_mems_t), &acquisitionToAlgorithmQueue_attributes);
+  acquisitionToAlgorithmQueueHandle = osMessageQueueNew (1, sizeof(data_mems_t), &acquisitionToAlgorithmQueue_attributes);
 
   /* creation of algorithmToLogQueue */
-  algorithmToLogQueueHandle = osMessageQueueNew (1, sizeof(quaternion_t), &algorithmToLogQueue_attributes);
+  algorithmToLogQueueHandle = osMessageQueueNew (1, sizeof(euler_ang_t), &algorithmToLogQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -282,26 +287,30 @@ void StartAcquisitionTask(void *argument)
 	}
 
 	lsm6dsl_block_data_update_set(&lsm6dsl_ctx, PROPERTY_ENABLE);
-	lsm6dsl_xl_data_rate_set(&lsm6dsl_ctx, LSM6DSL_XL_ODR_12Hz5);
-	lsm6dsl_gy_data_rate_set(&lsm6dsl_ctx, LSM6DSL_GY_ODR_12Hz5);
+	lsm6dsl_xl_data_rate_set(&lsm6dsl_ctx, LSM6DSL_XL_ODR_104Hz);
+	lsm6dsl_gy_data_rate_set(&lsm6dsl_ctx, LSM6DSL_GY_ODR_104Hz);
 	lsm6dsl_xl_full_scale_set(&lsm6dsl_ctx, LSM6DSL_4g);
-	lsm6dsl_gy_full_scale_set(&lsm6dsl_ctx, LSM6DSL_500dps);
+	lsm6dsl_gy_full_scale_set(&lsm6dsl_ctx, LSM6DSL_2000dps);
 
 	lsm303agr_mag_block_data_update_set(&lsm303agr_ctx, PROPERTY_ENABLE);
 	lsm303agr_mag_data_rate_set(&lsm303agr_ctx, LSM303AGR_MG_ODR_10Hz);
 	lsm303agr_mag_set_rst_mode_set(&lsm303agr_ctx, LSM303AGR_SENS_OFF_CANC_EVERY_ODR);
 	lsm303agr_mag_operating_mode_set(&lsm303agr_ctx, LSM303AGR_CONTINUOUS_MODE);
 
-	data_raw_mems_t data_raw_mems;
-	temp16_t data_raw_temp;
+	data_mems_t data_mems;
 
-	memset(data_raw_mems.acceleration.u8bit, 0x00, 3 * sizeof(int16_t));
-	memset(data_raw_mems.gyro.u8bit, 0x00, 3 * sizeof(int16_t));
-	memset(data_raw_mems.magneto.u8bit, 0x00, 3 * sizeof(int16_t));
-	memset(&data_raw_mems.time, 0x00, sizeof(uint32_t));
-	memset(data_raw_temp.u8bit, 0x00, sizeof(int16_t));
+	axis3bit16_t acc_raw;
+	axis3bit16_t gyro_raw;
+	axis3bit16_t magneto_raw;
+	temp16_t temp_raw;
 
-	osTimerStart(acquisitionCycleTimerHandle, 100U);
+//	memset(data_raw_mems.acceleration.u8bit, 0x00, 3 * sizeof(int16_t));
+//	memset(data_raw_mems.gyro.u8bit, 0x00, 3 * sizeof(int16_t));
+//	memset(data_raw_mems.magneto.u8bit, 0x00, 3 * sizeof(int16_t));
+//	memset(&data_raw_mems.time, 0x00, sizeof(uint32_t));
+//	memset(data_raw_temp.u8bit, 0x00, sizeof(int16_t));
+
+	osTimerStart(acquisitionCycleTimerHandle, 10U);
 
 	/* Infinite loop */
   for(;;)
@@ -309,16 +318,30 @@ void StartAcquisitionTask(void *argument)
   	status = osSemaphoreAcquire(lsm303DrdyBinarySemHandle, osWaitForever);
 
   	if (status == osOK) {
-  	  lsm6dsl_acceleration_raw_get(&lsm6dsl_ctx, data_raw_mems.acceleration.u8bit);
-  	  lsm6dsl_angular_rate_raw_get(&lsm6dsl_ctx, data_raw_mems.gyro.u8bit);
-  	  lsm303agr_magnetic_raw_get(&lsm303agr_ctx, data_raw_mems.magneto.u8bit);
-  		lsm6dsl_temperature_raw_get(&lsm6dsl_ctx, data_raw_mems.temperature.u8bit);
+  	  lsm6dsl_acceleration_raw_get(&lsm6dsl_ctx, acc_raw.u8bit);
+  	  lsm6dsl_angular_rate_raw_get(&lsm6dsl_ctx, gyro_raw.u8bit);
+  	  lsm303agr_magnetic_raw_get(&lsm303agr_ctx, magneto_raw.u8bit);
+  		lsm6dsl_temperature_raw_get(&lsm6dsl_ctx, temp_raw.u8bit);
 
-  		osMessageQueuePut(acquisitionToAlgorithmQueueHandle, &data_raw_mems, 0U, 0U);
+			data_mems.acc.ax[0] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[0])/1000;//*0.00981 - 0.2906;
+			data_mems.acc.ax[1] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[1])/1000;//*0.00981 + 0.6679;
+			data_mems.acc.ax[2] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[2])/1000;//*0.00981 - 0.5317;
+
+			data_mems.gyro.ax[0] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[0])/100000;//*0.001 - 0.7890 + 0.0486*temp;
+			data_mems.gyro.ax[1] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[1])/100000;//*0.001 - 0.0266 - 0.1064*temp;
+			data_mems.gyro.ax[2] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[2])/100000;
+
+			for (size_t axes_it = 0; axes_it < 3; axes_it++)
+			{
+				data_mems.gyro.ax[axes_it] = ((data_mems.gyro.ax[axes_it] < 0.1) && (data_mems.gyro.ax[axes_it] > 0.1)) ? data_mems.gyro.ax[axes_it] : 0;
+			}
+
+			data_mems.temp = lsm6dsl_from_lsb_to_celsius(temp_raw.i16bit);// - 20.1605;
+
+  		osMessageQueuePut(acquisitionToAlgorithmQueueHandle, &data_mems, 0U, 0U);
   	}
 
-//		osThreadYield();
-    osDelay(90);
+    osDelay(8);
   }
   /* USER CODE END StartAcquisitionTask */
 }
@@ -334,40 +357,29 @@ void StartAlgorithmTask(void *argument)
 {
   /* USER CODE BEGIN StartAlgorithmTask */
 	osStatus_t status;
-	data_raw_mems_t data_raw_mems;
-//	temp16_t data_raw_temp;
-	quaternion_t quaternion;
-	float_t temp;
+	data_mems_t data_mems;
+	euler_ang_t euler_ang;
+//	quaternion_t quaternion;
 
-	Algorithm_initialize();
+//	Algorithm_initialize();
   /* Infinite loop */
   for(;;)
   {
-  	status = osMessageQueueGet(acquisitionToAlgorithmQueueHandle, &data_raw_mems, NULL, 0U);   // wait for message
+  	status = osMessageQueueGet(acquisitionToAlgorithmQueueHandle, &data_mems, NULL, 0U);   // wait for message
 
-  	if (status == osOK) {
-  		temp = lsm6dsl_from_lsb_to_celsius(data_raw_mems.temperature.i16bit) - 20.1605;
-			Algorithm_U.AccX = lsm6dsl_from_fs4g_to_mg(data_raw_mems.acceleration.i16bit[0])*0.00981 - 0.2906;
-			Algorithm_U.AccY = lsm6dsl_from_fs4g_to_mg(data_raw_mems.acceleration.i16bit[1])*0.00981 + 0.6679;
-			Algorithm_U.AccZ = lsm6dsl_from_fs4g_to_mg(data_raw_mems.acceleration.i16bit[2])*0.00981 - 0.5317;
-//			Algorithm_U.GyroX = (lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[0])*0.001 - 0.7890 + 0.0486*temp) * 0.0174532925;
-//			Algorithm_U.GyroY = (lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[1])*0.001 - 0.0266 - 0.1064*temp) * 0.0174532925;
-//			Algorithm_U.GyroZ = (lsm6dsl_from_fs125dps_to_mdps(data_raw_mems.gyro.i16bit[2])*0.001 - 0.9607 - 0.0150*temp) * 0.0174532925;
+  	if (status == osOK)
+  	{
+//			Algorithm_step();
+//			quaternion.x = Algorithm_Y.EulXYZ[0];
+//			quaternion.y = Algorithm_Y.EulXYZ[1];
+//			quaternion.z = Algorithm_Y.EulXYZ[2];
 
-			Algorithm_U.GyroX = lsm6dsl_from_fs500dps_to_mdps(data_raw_mems.gyro.i16bit[0])*0.001 - 0.7890 + 0.0486*temp;
-			Algorithm_U.GyroY = lsm6dsl_from_fs500dps_to_mdps(data_raw_mems.gyro.i16bit[1])*0.001 - 0.0266 - 0.1064*temp;
-			Algorithm_U.GyroZ = lsm6dsl_from_fs500dps_to_mdps(data_raw_mems.gyro.i16bit[2])*0.001 - 0.9607 - 0.0150*temp;
+  		MadgwickAHRSupdateIMU(data_mems.gyro.ax[0], data_mems.gyro.ax[1], data_mems.gyro.ax[2], data_mems.acc.ax[0], data_mems.acc.ax[1], data_mems.acc.ax[2]);
+  		ToEulerAngles(&euler_ang);
 
-			Algorithm_step();
-
-			quaternion.x = Algorithm_Y.EulXYZ[0];
-			quaternion.y = Algorithm_Y.EulXYZ[1];
-			quaternion.z = Algorithm_Y.EulXYZ[2];
-
-			status = osMessageQueuePut(algorithmToLogQueueHandle, &quaternion, 0U, 0U);//osWaitForever);
-//			temp_celsius = lsm6dsl_from_lsb_to_celsius(data_raw_temp.i16bit);
+			status = osMessageQueuePut(algorithmToLogQueueHandle, &euler_ang, 0U, 0U);//osWaitForever);
   	}
-    osDelay(90);
+    osDelay(8);
   }
   /* USER CODE END StartAlgorithmTask */
 }
@@ -383,24 +395,30 @@ void StartLogTask(void *argument)
 {
   /* USER CODE BEGIN StartLogTask */
 	osStatus_t status = osOK;
-	quaternion_t quaternion;
-
+//	quaternion_t quaternion;
+	euler_ang_t euler_ang;
 	uint8_t log_payload[100];
 	uint8_t log_size = 0;
   /* Infinite loop */
   for(;;)
   {
-  	status = osMessageQueueGet(algorithmToLogQueueHandle, &quaternion, NULL, 0U);
+  	status = osMessageQueueGet(algorithmToLogQueueHandle, &euler_ang, NULL, 0U);
 
   	if (status == osOK) {
-  		log_size = sprintf((char*)log_payload, "EulXYZ: %f %f %f\r\n", Algorithm_Y.EulXYZ[0], Algorithm_Y.EulXYZ[1], Algorithm_Y.EulXYZ[2]);
+  		euler_ang.roll = euler_ang.roll*180.0/PI;
+  		euler_ang.pitch = euler_ang.pitch*180.0/PI;
+  		euler_ang.yaw = euler_ang.yaw*180.0/PI;
+
+  		log_size = sprintf((char*)log_payload, "Roll: %.3f\t Pitch: %.3f\t Yaw: %.3f\r\n", euler_ang.roll, euler_ang.pitch, euler_ang.yaw);
   		HAL_UART_Transmit_DMA(&huart2, log_payload, log_size);
+
+//  		log_size = sprintf((char*)log_payload, "EulXYZ: %f %f %f\r\n", Algorithm_Y.EulXYZ[0], Algorithm_Y.EulXYZ[1], Algorithm_Y.EulXYZ[2]);
+//  		HAL_UART_Transmit_DMA(&huart2, log_payload, log_size);
 //  					printf("Accl: %f %f %f Gyro: %f %f %f \r\n", Algorithm_U.AccX, Algorithm_U.AccY, Algorithm_U.AccZ, Algorithm_U.GyroX, Algorithm_U.GyroY, Algorithm_U.GyroZ);
 //  					printf("EulXYZ: %f %f %f\r\n", Algorithm_Y.EulXYZ[0], Algorithm_Y.EulXYZ[1], Algorithm_Y.EulXYZ[2]);
-  		//print log
   	}
 
-    osDelay(90);
+    osDelay(8);
   }
   /* USER CODE END StartLogTask */
 }
