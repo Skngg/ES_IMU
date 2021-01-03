@@ -33,8 +33,12 @@
 #include "retarget.h"
 #include "lsm6dsl_reg.h"
 #include "lsm303agr_reg.h"
-//#include "Algorithm.h"
+#ifdef MADGWICK_C_CODED
 #include "ahrs_madgwick.h"
+#endif
+#ifdef MADGWICK_MATLAB_CODED
+#include "Algorithm.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,11 +58,19 @@ typedef union {
 } temp16_t;
 
 typedef struct {
+//#ifdef MADGWICK_C_CODED
 	axis3_t acc;
 	axis3_t gyro;
-//	axis3bit16_t magneto;
+//	axis3_t mag;
 	float temp;
-//	uint32_t time;
+//#endif
+
+//#ifdef MADGWICK_MATLAB_CODED
+//	axis3bit16_t raw_acc;
+//	axis3bit16_t raw_gyro;
+//	axis3bit16_t raw_mag;
+//	temp16_t temp;
+//#endif
 } data_mems_t;
 
 typedef enum {
@@ -88,7 +100,12 @@ typedef struct {
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 extern UART_HandleTypeDef huart2;
-//static data_raw_mems_t data_raw_mems;
+
+/* Definitions for algorithmToLogQueue */
+osMessageQueueId_t algorithmToLogQueueHandle;
+const osMessageQueueAttr_t algorithmToLogQueue_attributes = {
+  .name = "algorithmToLogQueue"
+};
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -122,11 +139,6 @@ const osThreadAttr_t logTask_attributes = {
 osMessageQueueId_t acquisitionToAlgorithmQueueHandle;
 const osMessageQueueAttr_t acquisitionToAlgorithmQueue_attributes = {
   .name = "acquisitionToAlgorithmQueue"
-};
-/* Definitions for algorithmToLogQueue */
-osMessageQueueId_t algorithmToLogQueueHandle;
-const osMessageQueueAttr_t algorithmToLogQueue_attributes = {
-  .name = "algorithmToLogQueue"
 };
 /* Definitions for acquisitionCycleTimer */
 osTimerId_t acquisitionCycleTimerHandle;
@@ -190,10 +202,14 @@ void MX_FREERTOS_Init(void) {
   /* creation of acquisitionToAlgorithmQueue */
   acquisitionToAlgorithmQueueHandle = osMessageQueueNew (1, sizeof(data_mems_t), &acquisitionToAlgorithmQueue_attributes);
 
-  /* creation of algorithmToLogQueue */
-  algorithmToLogQueueHandle = osMessageQueueNew (1, sizeof(euler_ang_t), &algorithmToLogQueue_attributes);
-
   /* USER CODE BEGIN RTOS_QUEUES */
+#ifdef MADGWICK_C_CODED
+  algorithmToLogQueueHandle = osMessageQueueNew (1, sizeof(euler_ang_t), &algorithmToLogQueue_attributes);
+#endif
+
+#ifdef MADGWICK_MATLAB_CODED
+  algorithmToLogQueueHandle = osMessageQueueNew (1, sizeof(quaternion_t), &algorithmToLogQueue_attributes);
+#endif
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
 
@@ -250,6 +266,13 @@ void StartAcquisitionTask(void *argument)
   /* USER CODE BEGIN StartAcquisitionTask */
 	osStatus_t status = osOK;
 
+	axis3bit16_t acc_raw;
+	axis3bit16_t gyro_raw;
+	axis3bit16_t magneto_raw;
+	temp16_t temp_raw;
+
+	data_mems_t data_mems;
+
 	// Set handles for sensor communication
 	stmdev_ctx_t lsm6dsl_ctx;
 	lsm6dsl_ctx.write_reg = lsm6dsl_write;
@@ -297,19 +320,6 @@ void StartAcquisitionTask(void *argument)
 	lsm303agr_mag_set_rst_mode_set(&lsm303agr_ctx, LSM303AGR_SENS_OFF_CANC_EVERY_ODR);
 	lsm303agr_mag_operating_mode_set(&lsm303agr_ctx, LSM303AGR_CONTINUOUS_MODE);
 
-	data_mems_t data_mems;
-
-	axis3bit16_t acc_raw;
-	axis3bit16_t gyro_raw;
-	axis3bit16_t magneto_raw;
-	temp16_t temp_raw;
-
-//	memset(data_raw_mems.acceleration.u8bit, 0x00, 3 * sizeof(int16_t));
-//	memset(data_raw_mems.gyro.u8bit, 0x00, 3 * sizeof(int16_t));
-//	memset(data_raw_mems.magneto.u8bit, 0x00, 3 * sizeof(int16_t));
-//	memset(&data_raw_mems.time, 0x00, sizeof(uint32_t));
-//	memset(data_raw_temp.u8bit, 0x00, sizeof(int16_t));
-
 	osTimerStart(acquisitionCycleTimerHandle, 10U);
 
 	/* Infinite loop */
@@ -343,6 +353,7 @@ void StartAcquisitionTask(void *argument)
 
     osDelay(8);
   }
+
   /* USER CODE END StartAcquisitionTask */
 }
 
@@ -356,10 +367,11 @@ void StartAcquisitionTask(void *argument)
 void StartAlgorithmTask(void *argument)
 {
   /* USER CODE BEGIN StartAlgorithmTask */
+#ifdef MADGWICK_C_CODED
 	osStatus_t status;
+
 	data_mems_t data_mems;
 	euler_ang_t euler_ang;
-//	quaternion_t quaternion;
 
 //	Algorithm_initialize();
   /* Infinite loop */
@@ -369,17 +381,45 @@ void StartAlgorithmTask(void *argument)
 
   	if (status == osOK)
   	{
-//			Algorithm_step();
-//			quaternion.x = Algorithm_Y.EulXYZ[0];
-//			quaternion.y = Algorithm_Y.EulXYZ[1];
-//			quaternion.z = Algorithm_Y.EulXYZ[2];
-
   		MadgwickAHRSupdateIMU(data_mems.gyro.ax[0], data_mems.gyro.ax[1], data_mems.gyro.ax[2], data_mems.acc.ax[0], data_mems.acc.ax[1], data_mems.acc.ax[2]);
   		ToEulerAngles(&euler_ang);
 
-			status = osMessageQueuePut(algorithmToLogQueueHandle, &euler_ang, 0U, 0U);//osWaitForever);
+			status = osMessageQueuePut(algorithmToLogQueueHandle, &euler_ang, 0U, 0U);
   	}
     osDelay(8);
+#endif
+
+#ifdef MADGWICK_MATLAB_CODED
+    osStatus_t status;
+
+    data_mems_t data_mems;
+  	quaternion_t quaternion;
+
+  	Algorithm_initialize();
+    /* Infinite loop */
+    for(;;)
+    {
+    	status = osMessageQueueGet(acquisitionToAlgorithmQueueHandle, &data_mems, NULL, 0U);   // wait for message
+
+    	if (status == osOK)
+    	{
+				Algorithm_U.AccX = data_mems.acc.ax[0];//lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[0])*0.00981 - 0.1476 - 0.1430;
+				Algorithm_U.AccY = data_mems.acc.ax[1];//lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[1])*0.00981 + 0.3055 + 0.3624;
+				Algorithm_U.AccZ = data_mems.acc.ax[2];//lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[2])*0.00981 - 0.2684 - 0.2633;
+				Algorithm_U.GyroX = data_mems.gyro.ax[0];//lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[0])*0.001 - 0.3981 - 0.3909 + 0.0486*temp;
+				Algorithm_U.GyroY = data_mems.gyro.ax[1];//lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[1])*0.001 - 2.4888 + 2.4622 - 0.1064*temp;
+				Algorithm_U.GyroZ = data_mems.gyro.ax[2];//lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[2])*0.001 - 0.4822 - 0.4785 - 0.0150*temp;
+
+  			Algorithm_step();
+  			quaternion.x = Algorithm_Y.EulXYZ[0];
+  			quaternion.y = Algorithm_Y.EulXYZ[1];
+  			quaternion.z = Algorithm_Y.EulXYZ[2];
+
+  			status = osMessageQueuePut(algorithmToLogQueueHandle, &quaternion, 0U, 0U);
+    	}
+
+      osDelay(8);
+#endif
   }
   /* USER CODE END StartAlgorithmTask */
 }
@@ -394,6 +434,7 @@ void StartAlgorithmTask(void *argument)
 void StartLogTask(void *argument)
 {
   /* USER CODE BEGIN StartLogTask */
+#ifdef MADGWICK_C_CODED
 	osStatus_t status = osOK;
 //	quaternion_t quaternion;
 	euler_ang_t euler_ang;
@@ -420,6 +461,28 @@ void StartLogTask(void *argument)
 
     osDelay(8);
   }
+#endif
+
+#ifdef MADGWICK_MATLAB_CODED
+	osStatus_t status = osOK;
+	quaternion_t quaternion;
+	uint8_t log_payload[100];
+	uint8_t log_size = 0;
+
+	/* Infinite loop */
+  for(;;)
+  {
+  	status = osMessageQueueGet(algorithmToLogQueueHandle, &quaternion, NULL, 0U);
+
+  	if (status == osOK)
+  	{
+  		log_size = sprintf((char*)log_payload, "Eul XYZ: %.3f %.3f %.3f \r\n", quaternion.x, quaternion.y, quaternion.z);
+  		HAL_UART_Transmit_DMA(&huart2, log_payload, log_size);
+  	}
+
+    osDelay(8);
+  }
+#endif
   /* USER CODE END StartLogTask */
 }
 
