@@ -333,13 +333,20 @@ void StartAcquisitionTask(void *argument)
   	  lsm303agr_magnetic_raw_get(&lsm303agr_ctx, magneto_raw.u8bit);
   		lsm6dsl_temperature_raw_get(&lsm6dsl_ctx, temp_raw.u8bit);
 
-			data_mems.acc.ax[0] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[0])/1000;//*0.00981 - 0.2906;
-			data_mems.acc.ax[1] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[1])/1000;//*0.00981 + 0.6679;
-			data_mems.acc.ax[2] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[2])/1000;//*0.00981 - 0.5317;
+//			data_mems.acc.ax[0] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[0])/1000;//*0.00981 - 0.2906;
+//			data_mems.acc.ax[1] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[1])/1000;//*0.00981 + 0.6679;
+//			data_mems.acc.ax[2] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[2])/1000;//*0.00981 - 0.5317;
+			data_mems.acc.ax[0] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[0])*0.00981;// - 0.2906;
+			data_mems.acc.ax[1] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[1])*0.00981;// + 0.6679;
+			data_mems.acc.ax[2] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[2])*0.00981;// - 0.5317;
 
-			data_mems.gyro.ax[0] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[0])/100000;//*0.001 - 0.7890 + 0.0486*temp;
-			data_mems.gyro.ax[1] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[1])/100000;//*0.001 - 0.0266 - 0.1064*temp;
-			data_mems.gyro.ax[2] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[2])/100000;
+//			data_mems.gyro.ax[0] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[0])/100000;//*0.001 - 0.7890 + 0.0486*temp;
+//			data_mems.gyro.ax[1] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[1])/100000;//*0.001 - 0.0266 - 0.1064*temp;
+//			data_mems.gyro.ax[2] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[2])/100000;
+
+			data_mems.gyro.ax[0] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[0])*0.001;// - 0.7890 + 0.0486*temp;
+			data_mems.gyro.ax[1] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[1])*0.001;// - 0.0266 - 0.1064*temp;
+			data_mems.gyro.ax[2] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[2])*0.001;// - 0.4822 - 0.4785 - 0.0150*temp;
 
 			for (size_t axes_it = 0; axes_it < 3; axes_it++)
 			{
@@ -387,6 +394,7 @@ void StartAlgorithmTask(void *argument)
 			status = osMessageQueuePut(algorithmToLogQueueHandle, &euler_ang, 0U, 0U);
   	}
     osDelay(8);
+  }
 #endif
 
 #ifdef MADGWICK_MATLAB_CODED
@@ -411,16 +419,17 @@ void StartAlgorithmTask(void *argument)
 				Algorithm_U.GyroZ = data_mems.gyro.ax[2];//lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[2])*0.001 - 0.4822 - 0.4785 - 0.0150*temp;
 
   			Algorithm_step();
-  			quaternion.x = Algorithm_Y.EulXYZ[0];
-  			quaternion.y = Algorithm_Y.EulXYZ[1];
-  			quaternion.z = Algorithm_Y.EulXYZ[2];
+  			quaternion.w = Algorithm_Y.Quat[0];
+  			quaternion.x = Algorithm_Y.Quat[1];
+  			quaternion.y = Algorithm_Y.Quat[2];
+  			quaternion.z = Algorithm_Y.Quat[3];
 
   			status = osMessageQueuePut(algorithmToLogQueueHandle, &quaternion, 0U, 0U);
     	}
 
       osDelay(8);
+    }
 #endif
-  }
   /* USER CODE END StartAlgorithmTask */
 }
 
@@ -476,7 +485,7 @@ void StartLogTask(void *argument)
 
   	if (status == osOK)
   	{
-  		log_size = sprintf((char*)log_payload, "Eul XYZ: %.3f %.3f %.3f \r\n", quaternion.x, quaternion.y, quaternion.z);
+  		log_size = sprintf((char*)log_payload, "w%.3fwa%.3fab%.3fbc%.3fc\r\n", quaternion.w, quaternion.x, quaternion.y, quaternion.z);
   		HAL_UART_Transmit_DMA(&huart2, log_payload, log_size);
   	}
 
