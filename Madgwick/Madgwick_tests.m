@@ -15,7 +15,8 @@ beta = sqrt(3/4) * 0.0124;
 %to the gyroscope measurement error
 
 fs = 100;
-dt = 1/fs;
+%dt = 1/fs;
+dt = 0.011;
 firstLoopNumSamples = fs*8;
 secondLoopNumSamples = fs*4;
 totalNumSamples = firstLoopNumSamples + secondLoopNumSamples;

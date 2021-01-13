@@ -411,12 +411,12 @@ void StartAlgorithmTask(void *argument)
 
     	if (status == osOK)
     	{
-				Algorithm_U.AccX = data_mems.acc.ax[0];//lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[0])*0.00981 - 0.1476 - 0.1430;
-				Algorithm_U.AccY = data_mems.acc.ax[1];//lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[1])*0.00981 + 0.3055 + 0.3624;
-				Algorithm_U.AccZ = data_mems.acc.ax[2];//lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[2])*0.00981 - 0.2684 - 0.2633;
-				Algorithm_U.GyroX = data_mems.gyro.ax[0];//lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[0])*0.001 - 0.3981 - 0.3909 + 0.0486*temp;
-				Algorithm_U.GyroY = data_mems.gyro.ax[1];//lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[1])*0.001 - 2.4888 + 2.4622 - 0.1064*temp;
-				Algorithm_U.GyroZ = data_mems.gyro.ax[2];//lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[2])*0.001 - 0.4822 - 0.4785 - 0.0150*temp;
+			Algorithm_U.AccX = data_mems.acc.ax[0];//lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[0])*0.00981 - 0.1476 - 0.1430;
+			Algorithm_U.AccY = data_mems.acc.ax[1];//lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[1])*0.00981 + 0.3055 + 0.3624;
+			Algorithm_U.AccZ = data_mems.acc.ax[2];//lsm6dsl_from_fs2g_to_mg(data_raw_acceleration.i16bit[2])*0.00981 - 0.2684 - 0.2633;
+			Algorithm_U.GyroX = data_mems.gyro.ax[0];//lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[0])*0.001 - 0.3981 - 0.3909 + 0.0486*temp;
+			Algorithm_U.GyroY = data_mems.gyro.ax[1];//lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[1])*0.001 - 2.4888 + 2.4622 - 0.1064*temp;
+			Algorithm_U.GyroZ = data_mems.gyro.ax[2];//lsm6dsl_from_fs125dps_to_mdps(data_raw_gyro.i16bit[2])*0.001 - 0.4822 - 0.4785 - 0.0150*temp;
 
   			Algorithm_step();
   			quaternion.w = Algorithm_Y.Quat[0];
@@ -427,7 +427,7 @@ void StartAlgorithmTask(void *argument)
   			status = osMessageQueuePut(algorithmToLogQueueHandle, &quaternion, 0U, 0U);
     	}
 
-      osDelay(8);
+      osDelay(9);
     }
 #endif
   /* USER CODE END StartAlgorithmTask */

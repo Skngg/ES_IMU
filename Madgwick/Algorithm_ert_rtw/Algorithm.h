@@ -7,9 +7,9 @@
  *
  * Code generated for Simulink model 'Algorithm'.
  *
- * Model version                  : 1.36
+ * Model version                  : 1.45
  * Simulink Coder version         : 9.3 (R2020a) 18-Nov-2019
- * C/C++ source code generated on : Tue Dec  8 00:13:45 2020
+ * C/C++ source code generated on : Wed Jan 13 12:52:42 2021
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: ARM Compatible->ARM Cortex
@@ -31,27 +31,23 @@
 
 /* Block signals and states (default storage) for system '<Root>' */
 typedef struct {
-  real_T Delay_DSTATE[4];              /* '<S1>/Delay' */
-  real_T VectorConcatenate[12];        /* '<S3>/Vector Concatenate' */
-  real_T Normalization1[4];            /* '<S1>/Normalization1' */
-  real_T aSinInput;
-  real_T b;
-  real_T c;
+  real32_T Delay_DSTATE[4];            /* '<S1>/Delay' */
+  real32_T VectorConcatenate[12];      /* '<S3>/Vector Concatenate' */
 } DW_Algorithm_T;
 
 /* External inputs (root inport signals with default storage) */
 typedef struct {
-  real_T AccX;                         /* '<Root>/AccX' */
-  real_T AccY;                         /* '<Root>/AccY' */
-  real_T AccZ;                         /* '<Root>/AccZ' */
-  real_T GyroX;                        /* '<Root>/GyroX' */
-  real_T GyroY;                        /* '<Root>/GyroY' */
-  real_T GyroZ;                        /* '<Root>/GyroZ' */
+  real32_T AccX;                       /* '<Root>/AccX' */
+  real32_T AccY;                       /* '<Root>/AccY' */
+  real32_T AccZ;                       /* '<Root>/AccZ' */
+  real32_T GyroX;                      /* '<Root>/GyroX' */
+  real32_T GyroY;                      /* '<Root>/GyroY' */
+  real32_T GyroZ;                      /* '<Root>/GyroZ' */
 } ExtU_Algorithm_T;
 
 /* External outputs (root outports fed by signals with default storage) */
 typedef struct {
-  real_T EulXYZ[3];                    /* '<Root>/EulXYZ' */
+  real32_T Quat[4];                    /* '<Root>/Quat' */
 } ExtY_Algorithm_T;
 
 /* Block signals and states (default storage) */

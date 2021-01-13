@@ -117,6 +117,10 @@ def read_data():
 
     if useQuat:
         w = float(line.split('w')[1])
+        if w > 1:
+            w = 1
+        if w < -1:
+            w = -1
         nx = float(line.split('a')[1])
         ny = float(line.split('b')[1])
         nz = float(line.split('c')[1])
