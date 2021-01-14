@@ -311,7 +311,9 @@ void StartAcquisitionTask(void *argument)
 
 	lsm6dsl_block_data_update_set(&lsm6dsl_ctx, PROPERTY_ENABLE);
 	lsm6dsl_xl_data_rate_set(&lsm6dsl_ctx, LSM6DSL_XL_ODR_104Hz);
+	lsm6dsl_xl_hp_bandwidth_set(&lsm6dsl_ctx, LSM6DSL_XL_HP_ODR_DIV_100); // XL FILTER HP ODR/100 Hz : LP1 ODR/2 Hz : LP2 off
 	lsm6dsl_gy_data_rate_set(&lsm6dsl_ctx, LSM6DSL_GY_ODR_104Hz);
+	lsm6dsl_gy_band_pass_set(&lsm6dsl_ctx, LSM6DSL_HP_65mHz_LP2); // GY FILTER HP 65 mHz : LP1 off : LP2 ???
 	lsm6dsl_xl_full_scale_set(&lsm6dsl_ctx, LSM6DSL_4g);
 	lsm6dsl_gy_full_scale_set(&lsm6dsl_ctx, LSM6DSL_2000dps);
 
