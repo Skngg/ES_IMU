@@ -7,9 +7,9 @@
  *
  * Code generated for Simulink model 'Algorithm'.
  *
- * Model version                  : 1.36
+ * Model version                  : 1.47
  * Simulink Coder version         : 9.3 (R2020a) 18-Nov-2019
- * C/C++ source code generated on : Tue Dec  8 00:13:45 2020
+ * C/C++ source code generated on : Fri Jan 15 19:03:00 2021
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: ARM Compatible->ARM Cortex
@@ -19,25 +19,8 @@
 
 #ifndef RTW_HEADER_Algorithm_types_h_
 #define RTW_HEADER_Algorithm_types_h_
-#include "rtwtypes.h"
 
 /* Model Code Variants */
-#ifndef struct_tag_vxHWSOYrO9xtYchIOe7EKG
-#define struct_tag_vxHWSOYrO9xtYchIOe7EKG
-
-struct tag_vxHWSOYrO9xtYchIOe7EKG
-{
-  int32_T isInitialized;
-};
-
-#endif                                 /*struct_tag_vxHWSOYrO9xtYchIOe7EKG*/
-
-#ifndef typedef_robotics_slcore_internal_bloc_T
-#define typedef_robotics_slcore_internal_bloc_T
-
-typedef struct tag_vxHWSOYrO9xtYchIOe7EKG robotics_slcore_internal_bloc_T;
-
-#endif                               /*typedef_robotics_slcore_internal_bloc_T*/
 #endif                                 /* RTW_HEADER_Algorithm_types_h_ */
 
 /*
