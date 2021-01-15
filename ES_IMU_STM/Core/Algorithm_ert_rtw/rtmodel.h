@@ -7,9 +7,9 @@
  *
  * Code generated for Simulink model 'Algorithm'.
  *
- * Model version                  : 1.45
+ * Model version                  : 1.47
  * Simulink Coder version         : 9.3 (R2020a) 18-Nov-2019
- * C/C++ source code generated on : Wed Jan 13 12:52:42 2021
+ * C/C++ source code generated on : Fri Jan 15 19:03:00 2021
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: ARM Compatible->ARM Cortex

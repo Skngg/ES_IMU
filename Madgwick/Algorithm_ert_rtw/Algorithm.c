@@ -7,9 +7,9 @@
  *
  * Code generated for Simulink model 'Algorithm'.
  *
- * Model version                  : 1.45
+ * Model version                  : 1.47
  * Simulink Coder version         : 9.3 (R2020a) 18-Nov-2019
- * C/C++ source code generated on : Wed Jan 13 12:52:42 2021
+ * C/C++ source code generated on : Fri Jan 15 19:03:00 2021
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: ARM Compatible->ARM Cortex
@@ -33,12 +33,12 @@ ExtY_Algorithm_T Algorithm_Y;
 void Algorithm_step(void)
 {
   real32_T rtb_Normalization1[4];
+  real32_T rtb_Sum_g;
+  real32_T rtb_Gain3;
+  real32_T rtb_Gain4;
+  real32_T rtb_Product1_m1;
   real32_T acc;
   int32_T i;
-  real32_T rtb_S_Eq_wt_idx_0;
-  real32_T rtb_S_Eq_wt_idx_1;
-  real32_T rtb_S_Eq_wt_idx_2;
-  real32_T rtb_S_Eq_wt_idx_3;
   real32_T tmp;
   real32_T tmp_0;
 
@@ -50,10 +50,8 @@ void Algorithm_step(void)
   rtb_Normalization1[2] = 0.5F * Algorithm_DW.Delay_DSTATE[2];
   rtb_Normalization1[3] = 0.5F * Algorithm_DW.Delay_DSTATE[3];
 
-  /* Sum: '<S1>/Sum' incorporates:
+  /* Sum: '<S5>/Sum' incorporates:
    *  Constant: '<S1>/Constant'
-   *  Delay: '<S1>/Delay'
-   *  Gain: '<S1>/\delta t'
    *  Inport: '<Root>/GyroX'
    *  Inport: '<Root>/GyroY'
    *  Inport: '<Root>/GyroZ'
@@ -61,36 +59,44 @@ void Algorithm_step(void)
    *  Product: '<S5>/Product1'
    *  Product: '<S5>/Product2'
    *  Product: '<S5>/Product3'
+   */
+  rtb_Sum_g = ((0.0F - rtb_Normalization1[1] * Algorithm_U.GyroX) -
+               rtb_Normalization1[2] * Algorithm_U.GyroY) - rtb_Normalization1[3]
+    * Algorithm_U.GyroZ;
+
+  /* Sum: '<S6>/Sum' incorporates:
+   *  Inport: '<Root>/GyroX'
+   *  Inport: '<Root>/GyroY'
+   *  Inport: '<Root>/GyroZ'
    *  Product: '<S6>/Product'
    *  Product: '<S6>/Product2'
    *  Product: '<S6>/Product3'
+   */
+  rtb_Gain3 = (rtb_Normalization1[0] * Algorithm_U.GyroX + rtb_Normalization1[2]
+               * Algorithm_U.GyroZ) - rtb_Normalization1[3] * Algorithm_U.GyroY;
+
+  /* Sum: '<S7>/Sum' incorporates:
+   *  Inport: '<Root>/GyroX'
+   *  Inport: '<Root>/GyroY'
+   *  Inport: '<Root>/GyroZ'
    *  Product: '<S7>/Product'
    *  Product: '<S7>/Product1'
    *  Product: '<S7>/Product3'
+   */
+  rtb_Gain4 = (rtb_Normalization1[0] * Algorithm_U.GyroY - rtb_Normalization1[1]
+               * Algorithm_U.GyroZ) + rtb_Normalization1[3] * Algorithm_U.GyroX;
+
+  /* Sum: '<S8>/Sum' incorporates:
+   *  Inport: '<Root>/GyroX'
+   *  Inport: '<Root>/GyroY'
+   *  Inport: '<Root>/GyroZ'
    *  Product: '<S8>/Product'
    *  Product: '<S8>/Product1'
    *  Product: '<S8>/Product2'
-   *  Sum: '<S5>/Sum'
-   *  Sum: '<S6>/Sum'
-   *  Sum: '<S7>/Sum'
-   *  Sum: '<S8>/Sum'
    */
-  rtb_S_Eq_wt_idx_0 = (((0.0F - rtb_Normalization1[1] * Algorithm_U.GyroX) -
-                        rtb_Normalization1[2] * Algorithm_U.GyroY) -
-                       rtb_Normalization1[3] * Algorithm_U.GyroZ) * 0.011F +
-    Algorithm_DW.Delay_DSTATE[0];
-  rtb_S_Eq_wt_idx_1 = ((rtb_Normalization1[0] * Algorithm_U.GyroX +
-                        rtb_Normalization1[2] * Algorithm_U.GyroZ) -
-                       rtb_Normalization1[3] * Algorithm_U.GyroY) * 0.011F +
-    Algorithm_DW.Delay_DSTATE[1];
-  rtb_S_Eq_wt_idx_2 = ((rtb_Normalization1[0] * Algorithm_U.GyroY -
-                        rtb_Normalization1[1] * Algorithm_U.GyroZ) +
-                       rtb_Normalization1[3] * Algorithm_U.GyroX) * 0.011F +
-    Algorithm_DW.Delay_DSTATE[2];
-  rtb_S_Eq_wt_idx_3 = ((rtb_Normalization1[0] * Algorithm_U.GyroZ +
-                        rtb_Normalization1[1] * Algorithm_U.GyroY) -
-                       rtb_Normalization1[2] * Algorithm_U.GyroX) * 0.011F +
-    Algorithm_DW.Delay_DSTATE[3];
+  rtb_Product1_m1 = (rtb_Normalization1[0] * Algorithm_U.GyroZ +
+                     rtb_Normalization1[1] * Algorithm_U.GyroY) -
+    rtb_Normalization1[2] * Algorithm_U.GyroX;
 
   /* SignalConversion generated from: '<S3>/Vector Concatenate' incorporates:
    *  Delay: '<S1>/Delay'
@@ -133,7 +139,6 @@ void Algorithm_step(void)
    *  Gain: '<S12>/Gain'
    *  Gain: '<S13>/Gain'
    *  Gain: '<S14>/Gain'
-   *  Gain: '<S1>/Normalization'
    *  Inport: '<Root>/AccX'
    *  Inport: '<Root>/AccY'
    *  Inport: '<Root>/AccZ'
@@ -153,13 +158,13 @@ void Algorithm_step(void)
    */
   acc = (Algorithm_DW.Delay_DSTATE[1] * Algorithm_DW.Delay_DSTATE[3] -
          Algorithm_DW.Delay_DSTATE[0] * Algorithm_DW.Delay_DSTATE[2]) * 2.0F -
-    0.101936802F * Algorithm_U.AccX;
+    Algorithm_U.AccX;
   tmp = (Algorithm_DW.Delay_DSTATE[0] * Algorithm_DW.Delay_DSTATE[1] +
          Algorithm_DW.Delay_DSTATE[2] * Algorithm_DW.Delay_DSTATE[3]) * 2.0F -
-    0.101936802F * Algorithm_U.AccY;
+    Algorithm_U.AccY;
   tmp_0 = ((0.5F - Algorithm_DW.Delay_DSTATE[1] * Algorithm_DW.Delay_DSTATE[1])
            - Algorithm_DW.Delay_DSTATE[2] * Algorithm_DW.Delay_DSTATE[2]) * 2.0F
-    - 0.101936802F * Algorithm_U.AccZ;
+    - Algorithm_U.AccZ;
 
   /* Product: '<S1>/Product' */
   for (i = 0; i < 4; i++) {
@@ -182,48 +187,51 @@ void Algorithm_step(void)
   rtb_Normalization1[3] *= acc;
 
   /* Sum: '<S1>/Sum1' incorporates:
+   *  Delay: '<S1>/Delay'
+   *  Gain: '<S1>/\delta t'
    *  Gain: '<S1>/beta'
+   *  Sum: '<S1>/Sum'
    */
-  rtb_S_Eq_wt_idx_0 -= 0.0107387146F * rtb_Normalization1[0];
+  rtb_Sum_g = (0.011F * rtb_Sum_g + Algorithm_DW.Delay_DSTATE[0]) -
+    0.0107387146F * rtb_Normalization1[0];
+  rtb_Gain3 = (0.011F * rtb_Gain3 + Algorithm_DW.Delay_DSTATE[1]) -
+    0.0107387146F * rtb_Normalization1[1];
+  rtb_Gain4 = (0.011F * rtb_Gain4 + Algorithm_DW.Delay_DSTATE[2]) -
+    0.0107387146F * rtb_Normalization1[2];
+  rtb_Product1_m1 = (0.011F * rtb_Product1_m1 + Algorithm_DW.Delay_DSTATE[3]) -
+    0.0107387146F * rtb_Normalization1[3];
 
   /* Outport: '<Root>/Quat' */
-  Algorithm_Y.Quat[0] = rtb_S_Eq_wt_idx_0;
+  Algorithm_Y.Quat[0] = rtb_Sum_g;
 
-  /* Update for Delay: '<S1>/Delay' */
-  Algorithm_DW.Delay_DSTATE[0] = rtb_S_Eq_wt_idx_0;
-
-  /* Sum: '<S1>/Sum1' incorporates:
-   *  Gain: '<S1>/beta'
+  /* Update for Delay: '<S1>/Delay' incorporates:
+   *  Outport: '<Root>/Quat'
    */
-  rtb_S_Eq_wt_idx_0 = rtb_S_Eq_wt_idx_1 - 0.0107387146F * rtb_Normalization1[1];
+  Algorithm_DW.Delay_DSTATE[0] = rtb_Sum_g;
 
   /* Outport: '<Root>/Quat' */
-  Algorithm_Y.Quat[1] = rtb_S_Eq_wt_idx_0;
+  Algorithm_Y.Quat[1] = rtb_Gain3;
 
-  /* Update for Delay: '<S1>/Delay' */
-  Algorithm_DW.Delay_DSTATE[1] = rtb_S_Eq_wt_idx_0;
-
-  /* Sum: '<S1>/Sum1' incorporates:
-   *  Gain: '<S1>/beta'
+  /* Update for Delay: '<S1>/Delay' incorporates:
+   *  Outport: '<Root>/Quat'
    */
-  rtb_S_Eq_wt_idx_0 = rtb_S_Eq_wt_idx_2 - 0.0107387146F * rtb_Normalization1[2];
+  Algorithm_DW.Delay_DSTATE[1] = rtb_Gain3;
 
   /* Outport: '<Root>/Quat' */
-  Algorithm_Y.Quat[2] = rtb_S_Eq_wt_idx_0;
+  Algorithm_Y.Quat[2] = rtb_Gain4;
 
-  /* Update for Delay: '<S1>/Delay' */
-  Algorithm_DW.Delay_DSTATE[2] = rtb_S_Eq_wt_idx_0;
-
-  /* Sum: '<S1>/Sum1' incorporates:
-   *  Gain: '<S1>/beta'
+  /* Update for Delay: '<S1>/Delay' incorporates:
+   *  Outport: '<Root>/Quat'
    */
-  rtb_S_Eq_wt_idx_0 = rtb_S_Eq_wt_idx_3 - 0.0107387146F * rtb_Normalization1[3];
+  Algorithm_DW.Delay_DSTATE[2] = rtb_Gain4;
 
   /* Outport: '<Root>/Quat' */
-  Algorithm_Y.Quat[3] = rtb_S_Eq_wt_idx_0;
+  Algorithm_Y.Quat[3] = rtb_Product1_m1;
 
-  /* Update for Delay: '<S1>/Delay' */
-  Algorithm_DW.Delay_DSTATE[3] = rtb_S_Eq_wt_idx_0;
+  /* Update for Delay: '<S1>/Delay' incorporates:
+   *  Outport: '<Root>/Quat'
+   */
+  Algorithm_DW.Delay_DSTATE[3] = rtb_Product1_m1;
 }
 
 /* Model initialize function */

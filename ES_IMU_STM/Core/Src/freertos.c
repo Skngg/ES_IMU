@@ -311,9 +311,7 @@ void StartAcquisitionTask(void *argument)
 
 	lsm6dsl_block_data_update_set(&lsm6dsl_ctx, PROPERTY_ENABLE);
 	lsm6dsl_xl_data_rate_set(&lsm6dsl_ctx, LSM6DSL_XL_ODR_104Hz);
-	lsm6dsl_xl_hp_bandwidth_set(&lsm6dsl_ctx, LSM6DSL_XL_HP_ODR_DIV_100); // XL FILTER HP ODR/100 Hz : LP1 ODR/2 Hz : LP2 off
 	lsm6dsl_gy_data_rate_set(&lsm6dsl_ctx, LSM6DSL_GY_ODR_104Hz);
-	lsm6dsl_gy_band_pass_set(&lsm6dsl_ctx, LSM6DSL_HP_65mHz_LP2); // GY FILTER HP 65 mHz : LP1 off : LP2 ???
 	lsm6dsl_xl_full_scale_set(&lsm6dsl_ctx, LSM6DSL_4g);
 	lsm6dsl_gy_full_scale_set(&lsm6dsl_ctx, LSM6DSL_2000dps);
 
@@ -338,9 +336,9 @@ void StartAcquisitionTask(void *argument)
 //			data_mems.acc.ax[0] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[0])/1000;//*0.00981 - 0.2906;
 //			data_mems.acc.ax[1] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[1])/1000;//*0.00981 + 0.6679;
 //			data_mems.acc.ax[2] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[2])/1000;//*0.00981 - 0.5317;
-			data_mems.acc.ax[0] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[0])*0.00981;// - 0.2906;
-			data_mems.acc.ax[1] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[1])*0.00981;// + 0.6679;
-			data_mems.acc.ax[2] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[2])*0.00981;// - 0.5317;
+			data_mems.acc.ax[0] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[0])*0.001;// - 0.2906;
+			data_mems.acc.ax[1] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[1])*0.001;// + 0.6679;
+			data_mems.acc.ax[2] = lsm6dsl_from_fs4g_to_mg(acc_raw.i16bit[2])*0.001;// - 0.5317;
 
 //			data_mems.gyro.ax[0] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[0])/100000;//*0.001 - 0.7890 + 0.0486*temp;
 //			data_mems.gyro.ax[1] = lsm6dsl_from_fs2000dps_to_mdps(gyro_raw.i16bit[1])/100000;//*0.001 - 0.0266 - 0.1064*temp;
